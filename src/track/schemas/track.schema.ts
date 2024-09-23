@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
 import * as mongoose from 'mongoose';
+import { HydratedDocument } from 'mongoose';
+
 export type TrackDocument = HydratedDocument<Track>;
 
 @Schema()
@@ -12,7 +13,7 @@ export class Track {
   artist: string;
 
   @Prop()
-  text: string;
+  description: string;
 
   @Prop()
   listens: number;

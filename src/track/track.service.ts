@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { FileService, FileType } from '../file/file.service';
+import { Upload } from './dto/create-track.dto'; // Import the Upload interface
 
 @Injectable()
 export class TrackService {
@@ -15,9 +16,17 @@ export class TrackService {
     private fileService: FileService,
   ) {}
 
-  async create(dto: CreateTrackDto, image, audio): Promise<Track> {
-    const audioPath = this.fileService.createFile(FileType.AUDIO, audio);
-    const imagePath = this.fileService.createFile(FileType.IMAGE, image);
+  async create(
+    dto: CreateTrackDto,
+    imageFile?: Upload,
+    audioFile?: Upload,
+  ): Promise<Track> {
+    const audioPath = this.fileService.createFile(FileType.AUDIO, audioFile);
+    let imagePath: string | undefined;
+
+    if (imageFile) {
+      imagePath = this.fileService.createFile(FileType.IMAGE, imageFile);
+    }
 
     return await this.trackModel.create({
       ...dto,
