@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,7 +29,16 @@ export class TrackController {
   )
   create(@UploadedFiles() files, @Body() dto: CreateTrackDto) {
     const { image, audio } = files;
-    return this.trackService.create(dto, image[0], audio[0]);
+    if (!audio || audio.length === 0) {
+      throw new BadRequestException('Audio file is required!');
+    }
+
+    if (audio[0].mimetype !== 'audio/mpeg') {
+      throw new BadRequestException('Only mp3 files are allowed!');
+    }
+    const imageFile = image && image.length > 0 ? image[0] : undefined;
+    const audioFile = audio[0];
+    return this.trackService.create(dto, imageFile, audioFile);
   }
 
   @Get()
