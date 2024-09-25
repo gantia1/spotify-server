@@ -6,8 +6,10 @@ import {
   Get,
   Param,
   Post,
+  Request,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
@@ -15,12 +17,14 @@ import { CreateTrackDto } from './dto/create-track.dto';
 import { ObjectId } from 'mongoose';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../user/jwt-auth.guard';
 
 @Controller('tracks')
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'image', maxCount: 1 },
@@ -62,8 +66,10 @@ export class TrackController {
   }
 
   @Post('/comment')
-  addComment(@Body() dto: CreateCommentDto) {
-    return this.trackService.addComment(dto);
+  @UseGuards(JwtAuthGuard)
+  addComment(@Request() req, @Body() dto: CreateCommentDto) {
+    const user = req.user;
+    return this.trackService.addComment(dto, user);
   }
 
   @Post('/listen/:id')
