@@ -5,13 +5,19 @@ import { Track } from './track.schema';
 
 export type CommentDocument = HydratedDocument<Comment>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Comment {
   @Prop()
-  username: string;
+  name: string;
+
+  @Prop()
+  surname: string;
 
   @Prop()
   text: string;
+
+  @Prop()
+  createdAt: Date;
 
   @Prop({ type: { type: mongoose.Schema.Types.ObjectId, ref: 'Track' } })
   track: Track;
