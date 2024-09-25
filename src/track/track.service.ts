@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Track } from './schemas/track.schema';
 import { Comment } from './schemas/comment.schema';
 import { Model, ObjectId } from 'mongoose';
@@ -6,7 +6,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { FileService, FileType } from '../file/file.service';
-import { Upload } from './dto/create-track.dto'; // Import the Upload interface
+import { Upload } from './dto/create-track.dto';
+import { User } from '../user/schemas/user.schema';
 
 @Injectable()
 export class TrackService {
@@ -51,16 +52,36 @@ export class TrackService {
   }
 
   async getOne(id: ObjectId): Promise<Track> {
-    return this.trackModel.findById(id).populate('comments');
+    const track = await this.trackModel.findById(id).populate({
+      path: 'comments',
+      select: 'name surname text createdAt',
+    });
+
+    if (!track) {
+      throw new BadRequestException('Track not found');
+    }
+
+    return track;
   }
 
   async delete(id: ObjectId): Promise<ObjectId> {
     return this.trackModel.findByIdAndDelete(id);
   }
 
-  async addComment(dto: CreateCommentDto): Promise<Comment> {
+  async addComment(dto: CreateCommentDto, user: User): Promise<Comment> {
     const track = await this.trackModel.findById(dto.trackId);
-    const comment = await this.commentModel.create({ ...dto });
+    if (!track) {
+      throw new BadRequestException('Track not found');
+    }
+    // const currentDateTime = moment().tz('UTC').format();
+    const comment = await this.commentModel.create({
+      text: dto.text,
+      track: dto.trackId,
+      name: user.name,
+      surname: user.surname,
+      username: `${user.name} ${user.surname}`,
+    });
+
     track.comments.push(comment._id);
     await track.save();
     return comment;
